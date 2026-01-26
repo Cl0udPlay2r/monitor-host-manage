@@ -1,14 +1,9 @@
 package com.example.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.dto.Account;
-import com.example.entity.dto.AccountDetails;
-import com.example.entity.dto.AccountPrivacy;
 import com.example.entity.vo.request.*;
-import com.example.mapper.AccountDetailsMapper;
 import com.example.mapper.AccountMapper;
-import com.example.mapper.AccountPrivacyMapper;
 import com.example.service.AccountService;
 import com.example.utils.Const;
 import com.example.utils.FlowUtils;
@@ -22,7 +17,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -45,12 +39,6 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
     @Resource
     PasswordEncoder passwordEncoder;
-
-    @Resource
-    AccountPrivacyMapper privacyMapper;
-
-    @Resource
-    AccountDetailsMapper detailsMapper;
 
     @Resource
     FlowUtils flow;
@@ -94,33 +82,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         }
     }
 
-    /**
-     * 邮件验证码注册账号操作，需要检查验证码是否正确以及邮箱、用户名是否存在重名
-     * @param info 注册基本信息
-     * @return 操作结果，null表示正常，否则为错误原因
-     */
-    public String registerEmailAccount(EmailRegisterVO info){
-        String email = info.getEmail();
-        String code = this.getEmailVerifyCode(email);
-        if(code == null) return "请先获取验证码";
-        if(!code.equals(info.getCode())) return "验证码错误，请重新输入";
-        if(this.existsAccountByEmail(email)) return "该邮件地址已被注册";
-        String username = info.getUsername();
-        if(this.existsAccountByUsername(username)) return "该用户名已被他人使用，请重新更换";
-        String password = passwordEncoder.encode(info.getPassword());
-        Account account = new Account(null, info.getUsername(),
-                password, email, Const.ROLE_DEFAULT,null, new Date());
-        if(!this.save(account)) {
-            return "内部错误，注册失败";
-        } else {
-            this.deleteEmailVerifyCode(email);
-            privacyMapper.insert(new AccountPrivacy(account.getId()));
-            AccountDetails details = new AccountDetails();
-            details.setId(account.getId());
-            detailsMapper.insert(details);
-            return null;
-        }
-    }
+
 
     /**
      * 邮件验证码重置密码操作，需要检查验证码是否正确
@@ -154,44 +116,9 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         return null;
     }
 
-    /**
-     * 修改用户邮件地址
-     * @param id 被修改邮件用户id
-     * @param vo 修改邮件基本信息
-     */
-    @Override
-    public String modifyEmail(int id, ModifyEmailVO vo) {
-        String email = vo.getEmail();
-        String code = this.getEmailVerifyCode(email);
-        if(code == null) return "请先获取验证码";
-        if(!code.equals(vo.getCode())) return "验证码错误，请重新输入";
-        this.deleteEmailVerifyCode(email);
-        Account account = this.findAccountByNameOrEmail(email);
-        if(account != null && id != account.getId()){
-            return "该邮箱已被其他用户注册，无法完成此操作";
-        }
-        this.update()
-                .eq("id",id)
-                .set("email",email)
-                .update();
-        return null;
-    }
 
-    /**
-     * 修改用户密码数据库db_account表中的密码
-     * @param id 要修改密码的用户的id
-     * @param vo 修改密码基本信息
-     */
-    @Override
-    public String changePassword(int id, ChangePasswordVO vo) {
-        String password = this.findAccountById(id).getPassword();
-        if(!passwordEncoder.matches(vo.getPassword(),password ))return "原密码错误，请重新输入";
-        boolean success = this.update()
-                .eq("id",id)
-                .set("password",passwordEncoder.encode(vo.getNew_password()))
-                .update();
-        return success ? null : "内部错误，请联系管理员";
-    }
+
+
 
     /**
      * 移除Redis中存储的邮件验证码
@@ -233,32 +160,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
                 .eq("email", text)
                 .one();
     }
-    /**
-     * 通过用户id查找用户
-     * @param id 用户id
-     * @return 用户基本信息
-     */
 
-    @Override
-    public Account findAccountById(int id) {
-        return this.query().eq("id",id).one();
-    }
 
-    /**
-     * 查询指定邮箱的用户是否已经存在
-     * @param email 邮箱
-     * @return 是否存在
-     */
-    private boolean existsAccountByEmail(String email){
-        return this.baseMapper.exists(Wrappers.<Account>query().eq("email", email));
-    }
 
-    /**
-     * 查询指定用户名的用户是否已经存在
-     * @param username 用户名
-     * @return 是否存在
-     */
-    private boolean existsAccountByUsername(String username){
-        return this.baseMapper.exists(Wrappers.<Account>query().eq("username", username));
-    }
+
 }

@@ -45,7 +45,6 @@ spring:
     password: 'minioadmin'
   weather:
     api: edc924b842de4c15b8a9bb5aef993639
-    host: mw6cdnqpc5.re.qweatherapi.com
-    project: 4GKRET29CD
-    keyId: CGGVD98594
-    privateKey: MC4CAQAwBQYDK2VwBCIEICAvB+trbCX+F3x0NKAZMqFOB6Yl0U+Euu7wlaDLk7e1
+
+
+
