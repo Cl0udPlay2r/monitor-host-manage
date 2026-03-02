@@ -18,7 +18,7 @@ spring:
     password: guest
     virtual-host: /
   datasource:
-    url: jdbc:mysql://localhost:3306/school_froum
+    url: jdbc:mysql://localhost:3306/monitor
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -47,8 +47,6 @@ spring:
     endpoint: 'http://localhost:9000'
     username: 'minioadmin'
     password: 'minioadmin'
-  weather:
-    api: edc924b842de4c15b8a9bb5aef993639
 
 
 
