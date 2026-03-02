@@ -41,8 +41,8 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
 
     /**
      * 验证是否为系统用户发起的注册请求，并注册客户端
-     * @param token
-     * @return
+     * @param token 用户请求时携带的token
+     * @return boolean
      */
     @Override
     public boolean verifyAndRegister(String token) {
@@ -78,6 +78,7 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         for (int i = 0; i < 24; i++) {
             sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
         }
+        System.out.println("token:" + sb);
         return sb.toString();
     }
 }
