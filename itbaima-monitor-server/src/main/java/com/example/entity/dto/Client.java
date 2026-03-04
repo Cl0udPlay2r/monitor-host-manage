@@ -15,5 +15,7 @@ public class Client {
     private Integer id;
     private String name;
     private String token;
+    private String location;
+    private String node;
     private Date registerTime;
 }

@@ -2,9 +2,12 @@ package com.example.utils;
 
 
 import com.example.entity.BaseDetail;
+import com.example.entity.RuntimeDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.HWDiskStore;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.OperatingSystem;
@@ -13,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -43,6 +47,71 @@ public class MonitorUtils {
                 .setDisk(diskSize)
                 .setIp(ip);
 
+    }
+
+    /**
+     * 返回运行时数据
+     * @return RuntimeDetail
+     */
+    public RuntimeDetail  monitorRuntimeDetail(){
+        double statisticTime = 0.5;
+        try{
+            HardwareAbstractionLayer hardware = info.getHardware();
+            NetworkIF networkIF = Objects.requireNonNull(this.findNetworkInterface(hardware));
+            CentralProcessor processor = hardware.getProcessor();
+            double upload = networkIF.getBytesSent() , download = networkIF.getBytesRecv() ;
+            double read = hardware.getDiskStores().stream().mapToLong(HWDiskStore::getReadBytes).sum();
+            double write = hardware.getDiskStores().stream().mapToLong(HWDiskStore::getWriteBytes).sum();
+            long[] ticks = processor.getSystemCpuLoadTicks();
+            Thread.sleep((long) (statisticTime * 1000));
+            networkIF = Objects.requireNonNull(this.findNetworkInterface(hardware));
+            upload = (networkIF.getBytesSent() - upload) / statisticTime;
+            download = (networkIF.getBytesRecv() - download) / statisticTime;
+            read = (hardware.getDiskStores().stream().mapToLong(HWDiskStore::getReadBytes).sum() - read) / statisticTime;
+            write = (hardware.getDiskStores().stream().mapToLong(HWDiskStore::getWriteBytes).sum() - write) / statisticTime;
+            double memory = (hardware.getMemory().getTotal() - hardware.getMemory().getAvailable()) / 1024.0 / 1024 / 1024;
+            double disk = Arrays.stream(File.listRoots())
+                    .mapToDouble(file -> file.getTotalSpace() - file.getFreeSpace()).sum() / 1024 / 1024;
+            return new RuntimeDetail()
+                    .setCupUsage(this.calculateCpuUsage(processor,ticks))
+                    .setDiskUsage(disk)
+                    .setMemoryUsage(memory)
+                    .setNetworkUpload(upload/1024)
+                    .setNetworkDownload(download / 1024)
+                    .setDiskRead(read / 1024 /1024)
+                    .setDiskWrite(write / 1024 /1024)
+                    .setTimestamp(new Date().getTime());
+        }catch (InterruptedException e) {
+            log.error("读取运行时信息出现错误:"+e);
+        }
+        return null;
+    }
+
+    private double calculateCpuUsage(CentralProcessor processor,long[] prevTicks) {
+        long[] ticks = processor.getSystemCpuLoadTicks();
+
+        long idle = ticks[CentralProcessor.TickType.IDLE.getIndex()]
+                + ticks[CentralProcessor.TickType.IOWAIT.getIndex()];
+        long prevIdle = prevTicks[CentralProcessor.TickType.IDLE.getIndex()]
+                + prevTicks[CentralProcessor.TickType.IOWAIT.getIndex()];
+
+        long totalCpu = 0;
+        long prevTotalCpu = 0;
+
+        for (int i = 0; i < ticks.length; i++) {
+            totalCpu += ticks[i];
+            prevTotalCpu += prevTicks[i];
+        }
+
+        long totalDiff = totalCpu - prevTotalCpu;
+        long idleDiff = idle - prevIdle;
+
+        // 防止除 0
+        if (totalDiff == 0) {
+            return 0.0;
+        }
+
+        return (double) (totalDiff - idleDiff) / totalDiff;
     }
 
     private NetworkIF findNetworkInterface(HardwareAbstractionLayer hardware){
