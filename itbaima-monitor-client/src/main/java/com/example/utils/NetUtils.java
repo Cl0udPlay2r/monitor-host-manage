@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.example.entity.BaseDetail;
 import com.example.entity.ConnectionConfig;
 import com.example.entity.Response;
+import com.example.entity.RuntimeDetail;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -60,6 +61,12 @@ public class NetUtils {
         }else{
             log.error("系统基本信息更新失败: {}",response.message());
         }
+    }
+
+    public void updateRuntimeDetail(RuntimeDetail detail){
+        Response response = this.doPost("/runtime", detail);
+        if(!response.success())
+            log.error("运行时数据上报失败失败: {}",response.message());
     }
 
     private Response doPost(String url,Object data){
