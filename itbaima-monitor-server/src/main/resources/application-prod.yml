@@ -8,6 +8,10 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 spring:
+  influxdb3-core:
+    url: "http://localhost:8282"
+    database: "monitor"
+    token: "apiv3_p3Y4ojB3vTLwJaaUiI40NXUQQ5bnfjxE1iBoMBoJyO-quZCiLG6pTPXvvMfX1xHe-Dzr3brMTDiniGjvK29k5A"
   mail:
     host: smtp.163.com
     username: jxlpdt1@163.com

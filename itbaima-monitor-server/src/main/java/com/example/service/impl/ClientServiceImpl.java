@@ -8,6 +8,7 @@ import com.example.entity.vo.request.RuntimeDetailVO;
 import com.example.mapper.ClientDetailMapper;
 import com.example.mapper.ClientMapper;
 import com.example.service.ClientService;
+import com.example.utils.InfluxDbUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
@@ -27,6 +28,9 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
 
     @Resource
     private ClientDetailMapper detailMapper;
+
+    @Resource
+    InfluxDbUtils influx;
 
     @PostConstruct
     public void initClientCache(){
@@ -67,12 +71,12 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         return false;
     }
 
-    private Map<Integer,RuntimeDetailVO> currentRuntimeDetail = new ConcurrentHashMap<>();
+    private final Map<Integer,RuntimeDetailVO> currentRuntimeDetail = new ConcurrentHashMap<>();
 
     @Override
     public void updateRuntimeDetail(Client client, RuntimeDetailVO vo) {
         currentRuntimeDetail.put(client.getId(),vo);
-        System.out.println(vo);
+        influx.writeRuntimeDetail(vo,client.getId());
     }
 
     @Override
