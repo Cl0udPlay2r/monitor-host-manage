@@ -24,7 +24,15 @@ const router = createRouter({
             name: 'index',
             component: () => import('@/views/IndexView.vue'),
             children: [
-
+                {
+                    path: '',
+                    name: 'manage',
+                    component: () => import('@/views/main/Manage.vue')
+                },{
+                    path: 'security',
+                    name: 'security',
+                    component: ()=> import('@/views/main/Security.vue')
+                }
             ]
         }
     ]
