@@ -47,6 +47,7 @@ spring:
     endpoint: 'http://localhost:9000'
     username: 'minioadmin'
     password: 'minioadmin'
-
-
-
+  data:
+    redis:
+      port: 6449
+      host: localhost
