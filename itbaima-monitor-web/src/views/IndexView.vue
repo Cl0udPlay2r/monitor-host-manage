@@ -23,7 +23,7 @@ const defaultIndex = () => {
 
 const tab = ref(defaultIndex())
 function changePage(item) {
-    console.log("item.route:" + item.route + "; tab.value:" + tab.value + "; item.id:" + item.id);
+    // console.log("item.route:" + item.route + "; tab.value:" + tab.value + "; item.id:" + item.id);
     tab.value = item.id;
     router.push({name: item.route})
 }

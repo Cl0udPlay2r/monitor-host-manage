@@ -17,6 +17,7 @@
     "@vueuse/core": "^14.0.0",
     "axios": "^1.13.2",
     "element-plus": "^2.11.7",
+    "flag-icon-css": "^4.1.7",
     "pinia": "^3.0.4",
     "quill-delta-to-html": "^0.12.1",
     "quill-image-resize-vue": "^1.0.4",

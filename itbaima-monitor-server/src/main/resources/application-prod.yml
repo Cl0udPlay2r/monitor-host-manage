@@ -53,5 +53,6 @@ spring:
     password: 'minioadmin'
   data:
     redis:
-      port: 6449
+#      port: 6449
       host: localhost
+      port: 6379
