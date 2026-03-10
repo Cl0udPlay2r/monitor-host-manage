@@ -5,6 +5,7 @@ import com.example.entity.dto.Client;
 import com.example.entity.dto.ClientDetail;
 import com.example.entity.vo.request.ClientDetailVO;
 import com.example.entity.vo.request.RuntimeDetailVO;
+import com.example.entity.vo.response.ClientPreviewVO;
 import com.example.mapper.ClientDetailMapper;
 import com.example.mapper.ClientMapper;
 import com.example.service.ClientService;
@@ -89,6 +90,25 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         }else {
             detailMapper.insert(detail);
         }
+    }
+
+    /**
+     * 返回所有主机面板信息，当运行时的数据不存在或者最后一次上传时间大于1分钟，则判断为主机已离线
+     *
+     * @return 主机信息队列
+     */
+    @Override
+    public List<ClientPreviewVO> listClients() {
+        return clientIdCache.values().stream().map(client -> {
+            ClientPreviewVO vo = client.asViewObject(ClientPreviewVO.class);
+            BeanUtils.copyProperties(detailMapper.selectById(client.getId()),vo);
+            RuntimeDetailVO runtime = currentRuntimeDetail.get(client.getId());
+            if(runtime != null && System.currentTimeMillis() - runtime.getTimestamp() < 60 * 1000){
+                BeanUtils.copyProperties(runtime,vo);
+                vo.setOnline(true);
+            }
+            return vo;
+        }).toList();
     }
 
     private void addClientCache(Client client){

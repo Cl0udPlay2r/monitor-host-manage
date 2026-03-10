@@ -8,7 +8,7 @@ public class RuntimeDetailVO {
     @NotNull
     private long timestamp;
     @NotNull
-    private double cupUsage;
+    private double cpuUsage;
     @NotNull
     private double memoryUsage;
     @NotNull

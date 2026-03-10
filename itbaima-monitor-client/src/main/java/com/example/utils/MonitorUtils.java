@@ -11,6 +11,7 @@ import oshi.hardware.HWDiskStore;
 import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 import oshi.software.os.OperatingSystem;
+import oshi.hardware.CentralProcessor.TickType;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class MonitorUtils {
             double disk = Arrays.stream(File.listRoots())
                     .mapToDouble(file -> file.getTotalSpace() - file.getFreeSpace()).sum() / 1024 / 1024;
             return new RuntimeDetail()
-                    .setCupUsage(this.calculateCpuUsage(processor,ticks))
+                    .setCpuUsage(this.calculateCpuUsage(processor,ticks))
                     .setDiskUsage(disk)
                     .setMemoryUsage(memory)
                     .setNetworkUpload(upload/1024)
@@ -82,36 +83,33 @@ public class MonitorUtils {
                     .setDiskWrite(write / 1024 /1024)
                     .setTimestamp(new Date().getTime());
         }catch (InterruptedException e) {
-            log.error("读取运行时信息出现错误:"+e);
+            log.error("读取运行时信息出现错误:{}", String.valueOf(e));
+            return null;
         }
-        return null;
     }
 
     private double calculateCpuUsage(CentralProcessor processor,long[] prevTicks) {
         long[] ticks = processor.getSystemCpuLoadTicks();
 
-        long idle = ticks[CentralProcessor.TickType.IDLE.getIndex()]
-                + ticks[CentralProcessor.TickType.IOWAIT.getIndex()];
-        long prevIdle = prevTicks[CentralProcessor.TickType.IDLE.getIndex()]
-                + prevTicks[CentralProcessor.TickType.IOWAIT.getIndex()];
+        // 计算总时间差
+        long user = ticks[TickType.USER.getIndex()] - prevTicks[TickType.USER.getIndex()];
+        long nice = ticks[TickType.NICE.getIndex()] - prevTicks[TickType.NICE.getIndex()];
+        long sys = ticks[TickType.SYSTEM.getIndex()] - prevTicks[TickType.SYSTEM.getIndex()];
+        long idle = ticks[TickType.IDLE.getIndex()] - prevTicks[TickType.IDLE.getIndex()];
+        long iowait = ticks[TickType.IOWAIT.getIndex()] - prevTicks[TickType.IOWAIT.getIndex()];
+        long irq = ticks[TickType.IRQ.getIndex()] - prevTicks[TickType.IRQ.getIndex()];
+        long softirq = ticks[TickType.SOFTIRQ.getIndex()] - prevTicks[TickType.SOFTIRQ.getIndex()];
+        long steal = ticks[TickType.STEAL.getIndex()] - prevTicks[TickType.STEAL.getIndex()];
 
-        long totalCpu = 0;
-        long prevTotalCpu = 0;
+        long totalCpu = user + nice + sys + idle + iowait + irq + softirq + steal;
 
-        for (int i = 0; i < ticks.length; i++) {
-            totalCpu += ticks[i];
-            prevTotalCpu += prevTicks[i];
+        // 计算使用率: (总时间 - 空闲时间) / 总时间
+        double cpuUsage = 0;
+        if (totalCpu > 0) {
+            cpuUsage = (double) (totalCpu - idle) / totalCpu;
         }
 
-        long totalDiff = totalCpu - prevTotalCpu;
-        long idleDiff = idle - prevIdle;
-
-        // 防止除 0
-        if (totalDiff == 0) {
-            return 0.0;
-        }
-
-        return (double) (totalDiff - idleDiff) / totalDiff;
+        return  cpuUsage*100;
     }
 
     private NetworkIF findNetworkInterface(HardwareAbstractionLayer hardware){

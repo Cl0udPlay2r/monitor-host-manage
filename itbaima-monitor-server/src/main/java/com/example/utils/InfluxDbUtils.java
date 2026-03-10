@@ -30,7 +30,7 @@ public class InfluxDbUtils {
     public void writeRuntimeDetail(RuntimeDetailVO vo,int clientId){
         Point point = Point.measurement("runtime")
                 .setTag("clientId",String.valueOf(clientId))
-                .setField("cpuUsage",vo.getCupUsage())
+                .setField("cpuUsage",vo.getCpuUsage())
                 .setField("memoryUsage",vo.getMemoryUsage())
                 .setField("diskUsage",vo.getDiskUsage())
                 .setField("networkDownload",vo.getNetworkDownload())

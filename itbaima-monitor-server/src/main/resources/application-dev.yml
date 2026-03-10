@@ -5,7 +5,7 @@ springdoc:
     operations-sorter: alpha
 spring:
   influxdb3-core:
-    url: "http://localhost:8282"
+    url: "http://localhost:8181"
     database: "monitor"
     token: "apiv3_p3Y4ojB3vTLwJaaUiI40NXUQQ5bnfjxE1iBoMBoJyO-quZCiLG6pTPXvvMfX1xHe-Dzr3brMTDiniGjvK29k5A"
   mail:

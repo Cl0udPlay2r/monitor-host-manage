@@ -34,6 +34,6 @@ public class ClientController {
     public RestBean<Void> updateRuntimeDetail(@RequestAttribute(Const.ATTR_CLIENT)Client client,
                                               @RequestBody @Valid RuntimeDetailVO vo){
             clientService.updateRuntimeDetail(client,vo);
-            return  RestBean.success();
+            return RestBean.success();
     }
 }

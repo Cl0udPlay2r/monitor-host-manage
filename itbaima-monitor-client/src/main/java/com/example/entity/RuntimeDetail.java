@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain=true)
 public class RuntimeDetail {
     private long timestamp;
-    private double cupUsage;
+    private double cpuUsage;
     private double memoryUsage;
     private double diskUsage;
     private double networkUpload;
