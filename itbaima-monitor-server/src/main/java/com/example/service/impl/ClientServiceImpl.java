@@ -2,11 +2,14 @@ package com.example.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.entity.BaseData;
 import com.example.entity.dto.Client;
 import com.example.entity.dto.ClientDetail;
 import com.example.entity.vo.request.ClientDetailVO;
 import com.example.entity.vo.request.RenameClientVO;
+import com.example.entity.vo.request.RenameNodeVO;
 import com.example.entity.vo.request.RuntimeDetailVO;
+import com.example.entity.vo.response.ClientDetailsVO;
 import com.example.entity.vo.response.ClientPreviewVO;
 import com.example.mapper.ClientDetailMapper;
 import com.example.mapper.ClientMapper;
@@ -105,7 +108,7 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
             ClientPreviewVO vo = client.asViewObject(ClientPreviewVO.class);
             BeanUtils.copyProperties(detailMapper.selectById(client.getId()),vo);
             RuntimeDetailVO runtime = currentRuntimeDetail.get(client.getId());
-            if(runtime != null && System.currentTimeMillis() - runtime.getTimestamp() < 60 * 1000){
+            if(this.isOnline(runtime)){
                 BeanUtils.copyProperties(runtime,vo);
                 vo.setOnline(true);
             }
@@ -113,10 +116,34 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         }).toList();
     }
 
+    /**
+     * 重命名主机名称
+     * @param vo 请求参数
+     */
     @Override
     public void renameClient(RenameClientVO vo) {
         this.update(Wrappers.<Client>update().eq("id",vo.getId()).set("name",vo.getName()));
         this.initClientCache();
+    }
+
+    @Override
+    public ClientDetailsVO findClientDetailsById(int clientId) {
+        ClientDetailsVO vo = clientIdCache.get(clientId).asViewObject(ClientDetailsVO.class);
+        BeanUtils.copyProperties(detailMapper.selectById(clientId),vo);
+        vo.setOnline(isOnline(currentRuntimeDetail.get(clientId)));
+        return vo;
+    }
+
+    @Override
+    public void renameNode(RenameNodeVO vo) {
+        this.update(Wrappers.<Client>update()
+                .eq("id",vo.getId()).set("node",vo.getNode())
+                .set("location",vo.getLocation()));
+        this.initClientCache();
+    }
+
+    private boolean isOnline(RuntimeDetailVO runtime){
+        return runtime != null && System.currentTimeMillis() - runtime.getTimestamp() < 60 * 1000;
     }
 
     private void addClientCache(Client client){

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import PreviewCard from "@/component/PreviewCard.vue";
-import {ref} from "vue";
+import {reactive, ref} from "vue";
 import {get} from "@/net";
+import ClientDetails from "@/component/ClientDetails.vue";
 
 const list = ref([])
 
-const updateList = () => get('/api/monitor/list', data =>list.value = data)
-setInterval(updateList,10000)
+const updateList = () => get('/api/monitor/list', data => list.value = data)
+setInterval(updateList, 10000)
 updateList()
 
 </script>
@@ -24,6 +25,12 @@ updateList()
 </template>
 
 <style scoped>
+:deep(.el-drawer) {
+    margin: 10px;
+    height: calc(100% - 20px);
+    border-radius: 10px;
+}
+
 .manage-main {
     margin: 0 50px;
 
