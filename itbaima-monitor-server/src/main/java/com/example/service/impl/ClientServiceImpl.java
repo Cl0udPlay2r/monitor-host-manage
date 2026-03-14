@@ -2,7 +2,6 @@ package com.example.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.entity.BaseData;
 import com.example.entity.dto.Client;
 import com.example.entity.dto.ClientDetail;
 import com.example.entity.vo.request.ClientDetailVO;
@@ -11,6 +10,7 @@ import com.example.entity.vo.request.RenameNodeVO;
 import com.example.entity.vo.request.RuntimeDetailVO;
 import com.example.entity.vo.response.ClientDetailsVO;
 import com.example.entity.vo.response.ClientPreviewVO;
+import com.example.entity.vo.response.RuntimeHistoryVO;
 import com.example.mapper.ClientDetailMapper;
 import com.example.mapper.ClientMapper;
 import com.example.service.ClientService;
@@ -132,6 +132,16 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         BeanUtils.copyProperties(detailMapper.selectById(clientId),vo);
         vo.setOnline(isOnline(currentRuntimeDetail.get(clientId)));
         return vo;
+    }
+
+    @Override
+    public RuntimeHistoryVO runtimeDetailsHistory(int id) {
+        return influx.queryRuntimeHistory(id);
+    }
+
+    @Override
+    public RuntimeDetailVO runtimeDetailNow(int id) {
+        return currentRuntimeDetail.get(id);
     }
 
     @Override

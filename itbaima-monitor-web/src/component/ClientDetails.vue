@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {fitByUnit, percentageToStatus, cpuNameToImagePath, osNameToIcon, rename, copyIP} from '@/tools'
-import {reactive, watch} from "vue";
+import {computed, reactive, watch} from "vue";
 import {get,post} from "@/net";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {ElMessage} from "element-plus";
 
 const locations = [
     {node: 'cn',desc: '中国大陆'},
@@ -33,7 +33,9 @@ const details = reactive({
         location: '',
         disk: -1
     },
-    runtime: {},
+    runtime: {
+        list: []
+    },
     editNode: false
 })
 
@@ -65,6 +67,17 @@ function submitNodeEdit() {
     })
 }
 
+setInterval(() => {
+    if(props.id !== -1 && details.runtime) {
+        get(`/api/monitor/runtime-now?clientId=${props.id}`,data => {
+            details.runtime.list.splice(0,1)
+            details.runtime.list.push(data)
+        })
+    }
+},10000)
+
+const now = computed(() => details.runtime.list[details.runtime.list.length - 1])
+
 const init = id => {
     if (id !== -1) {
         details.base = {
@@ -81,15 +94,17 @@ const init = id => {
             location: '',
             disk: -1
         }
+        details.runtime = {list: []}
         get(`/api/monitor/details?clientId=${id}`, data => Object.assign(details.base, data))
+        get(`api/monitor/runtime-history?clientId=${id}`,data => Object.assign(details.runtime, data))
     }
 }
 watch(() => props.id, init, {immediate: true})
 </script>
 
 <template>
-    <div class="client-details" v-loading="Object.keys(details.base).length === 0">
-        <div v-if="Object.keys(details.base).length">
+    <div class="client-details" v-loading="!Object.keys(details.base).length">
+        <div v-if="Object.keys(details.base).length !== 0">
             <div class="title">
                 <i class="fa-solid fa-server"/>
                 服务器信息
@@ -172,26 +187,28 @@ watch(() => props.id, init, {immediate: true})
                 实时监控
             </div>
             <el-divider style="margin: 10px 0"/>
-            <div v-if="details.base.online">
-                <div style="display: flex">
-                    <el-progress style="margin: 0 20px 0 10px"
-                                 status="success" :percentage=10 type="dashboard" :width="100">
+            <div v-if="details.base.online" v-loading="!details.runtime.list.length"
+                 style="min-height: 200px">
+                <div style="display: flex" v-if="details.runtime.list.length">
+                    <el-progress style="margin: 0 20px 0 10px" :status="percentageToStatus(now.cpuUsage)"
+                                 :percentage=now.cpuUsage type="dashboard" :width="100">
                         <div style="font-size: 15px">CPU</div>
-                        <div style="font-size: 14px;margin-top: 5px">20%</div>
+                        <div style="font-size: 14px;margin-top: 5px">{{now.cpuUsage.toFixed(1)}}%</div>
                     </el-progress>
-                    <el-progress
-                        status="success" :percentage=36 type="dashboard" :width="100">
+                    <el-progress :status="percentageToStatus((now.memoryUsage/details.base.memory)*100)"
+                                 type="dashboard" :width="100"
+                                 :percentage=(now.memoryUsage/details.base.memory)*100 >
                         <div style="font-size: 15px">内存</div>
-                        <div style="font-size: 14px;margin-top: 5px">12.1GB</div>
+                        <div style="font-size: 14px;margin-top: 5px">{{now.memoryUsage.toFixed(1)}}GB</div>
                     </el-progress>
                     <div style="margin-left: 20px;flex: 1">
                         <div style="font-size: 13px">
                             <div style="margin-left: 3px">实时网络速度</div>
                             <i class="fa-solid fa-arrow-up" style="color: #ffb10a"></i>
-                            <span>{{ `${fitByUnit(10, 'KB')}` }}/s</span>
+                            <span>{{ `${fitByUnit(now.networkUpload, 'KB')}` }}/s</span>
                             <el-divider direction="vertical"/>
                             <i class="fa-solid fa-arrow-down" style="color: #00e1ff"></i>
-                            <span>{{ `${fitByUnit(149, 'KB')}` }}/s</span>
+                            <span>{{ `${fitByUnit(now.networkDownload, 'KB')}` }}/s</span>
                         </div>
                         <div style="margin-top: 10px;display: flex;justify-content: space-between">
                             <div>
@@ -199,11 +216,15 @@ watch(() => props.id, init, {immediate: true})
                                 <span style="font-size: 13px">硬盘总容量</span>
                             </div>
                             <div style="flex: 1;text-align: end">
-                                <div style="font-size: 13px;align-items: end">68GB/100GB</div>
+                                <div style="font-size: 13px;align-items: end">
+                                    {{(now.diskUsage/1024).toFixed(0)}}GB/{{details.base.disk.toFixed(0)}}GB
+                                </div>
                             </div>
                         </div>
                         <el-progress
-                            type="line" :width="120" :percentage="68" :show-text="false" :status="'success'"/>
+                            type="line" :width="120" :show-text="false"
+                            :percentage="((now.diskUsage/1024)/details.base.disk*100)"
+                            :status="((now.diskUsage/1024)/details.base.disk*100)"/>
                     </div>
                 </div>
             </div>

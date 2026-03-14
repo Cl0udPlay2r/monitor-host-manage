@@ -80,12 +80,19 @@ const displayClientDrawer = (id) => {
             </div>
         </div>
     </div>
-    <el-drawer size="520" :show-close="false" v-model="detail.show" :with-header="false">
+    <el-drawer size="520" :show-close="false" v-model="detail.show"
+               :with-header="false" @close="detail.id = -1">
         <client-details :id="detail.id" :update="update"/>
     </el-drawer>
 </template>
 
 <style scoped>
+:deep(.el-drawer) {
+    margin: 10px;
+    height: calc(100% - 20px);
+    border-radius: 10px;
+}
+
 .dark .instance-card {
     color: var(--el-text-color);
 }

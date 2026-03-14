@@ -13,6 +13,7 @@ public class ClientPreviewVO {
     private String ip;
     private String cpuName;
     private int cpuCores;
+    private double disk;
     private double cpuUsage;
     private double memory;
     private double memoryUsage;
