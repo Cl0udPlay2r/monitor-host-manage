@@ -58,7 +58,7 @@ const copyIP = (ip) => copy(ip).then(() => {
     ElMessage.success("IP已成功复制到剪切板")
 })
 
-function rename(name,id,after) {
+function rename(name, id, after) {
     ElMessageBox.prompt('请确认新的服务器主机名称', '修改名称', {
         confirmButtonText: "确认",
         cancelButtonText: '取消',
@@ -77,4 +77,29 @@ function rename(name,id,after) {
     })
 }
 
-export {fitByUnit, percentageToStatus, cpuNameToImagePath, osNameToIcon, copyIP, rename};
+function formatTimestamp(nanoTimestamp) {
+    const nano = typeof nanoTimestamp === 'bigint'
+        ? nanoTimestamp
+        : BigInt(nanoTimestamp);
+
+    // 2. 转换为毫秒（纳秒 → 毫秒：除以 1_000_000n）
+    const milli = nano / 1_000_000n;
+
+    // 3. 将毫秒转为 Number（此时数字在安全范围内）
+    const date = new Date(Number(milli));
+
+    // 4. 格式化
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+
+export {
+    fitByUnit, percentageToStatus, cpuNameToImagePath,
+    osNameToIcon, copyIP, rename, formatTimestamp
+};
