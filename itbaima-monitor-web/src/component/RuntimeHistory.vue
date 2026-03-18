@@ -36,9 +36,9 @@ function updateNetworkUsage(list) {
         list.map(item => item.networkDownload.toFixed(1))
     ]
     const option = defaultOption('网络(KB/s)', localTimeLine(list))
-    doubleSeries(option, ['上传(KB/s)','下载(KB/s)'], data, [
-        ['#f6b66e','#ffd29c','#fddfc033'],
-        ['#79c7ff','#98ccff','#4c505a']
+    doubleSeries(option, ['上传(KB/s)', '下载(KB/s)'], data, [
+        ['#f6b66e', '#ffd29c', '#fddfc033'],
+        ['#79c7ff', '#98ccff', '#4c505a']
     ])
     chart.setOption(option)
 }
@@ -50,9 +50,9 @@ function updateDiskUsage(list) {
         list.map(item => item.diskWrite.toFixed(1))
     ]
     const option = defaultOption('磁盘(KB/s)', localTimeLine(list))
-    doubleSeries(option, ['读取(KB/s)','写入(KB/s)'], data, [
-        ['#6af1f1','#90a1df','#fddfc033'],
-        ['rgb(232,223,205)','rgba(244,169,169,0.2)','#4c505a']
+    doubleSeries(option, ['读取(KB/s)', '写入(KB/s)'], data, [
+        ['#6af1f1', '#90a1df', '#fddfc033'],
+        ['rgb(232,223,205)', 'rgba(244,169,169,0.2)', '#4c505a']
     ])
     chart.setOption(option)
 }

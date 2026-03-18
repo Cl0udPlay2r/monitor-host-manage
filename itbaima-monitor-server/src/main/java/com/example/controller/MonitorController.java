@@ -22,35 +22,46 @@ public class MonitorController {
     ClientService service;
 
     @GetMapping("/list")
-    public RestBean<List<ClientPreviewVO>> listAllClient(){
+    public RestBean<List<ClientPreviewVO>> listAllClient() {
         return RestBean.success(service.listClients());
     }
 
     @PostMapping("/rename")
-    public RestBean<Void>reClientName(@RequestBody @Valid RenameClientVO vo){
+    public RestBean<Void> reClientName(@RequestBody @Valid RenameClientVO vo) {
         service.renameClient(vo);
         return RestBean.success();
     }
 
     @PostMapping("/node")
-    public RestBean<Void>reNodeName(@RequestBody @Valid RenameNodeVO vo){
+    public RestBean<Void> reNodeName(@RequestBody @Valid RenameNodeVO vo) {
         service.renameNode(vo);
         return RestBean.success();
     }
 
     @GetMapping("/details")
-    public RestBean<ClientDetailsVO>  details(int clientId){
+    public RestBean<ClientDetailsVO> details(int clientId) {
         return RestBean.success(service.findClientDetailsById(clientId));
     }
 
     @GetMapping("/runtime-history")
-    public RestBean<RuntimeHistoryVO> runtimeDetailsHistory(int clientId){
+    public RestBean<RuntimeHistoryVO> runtimeDetailsHistory(int clientId) {
         return RestBean.success(service.runtimeDetailsHistory(clientId));
     }
 
     @GetMapping("/runtime-now")
-    public RestBean<RuntimeDetailVO> runtimeDetailsNow(int clientId){
+    public RestBean<RuntimeDetailVO> runtimeDetailsNow(int clientId) {
         return RestBean.success(service.runtimeDetailNow(clientId));
+    }
+
+    @GetMapping("/register")
+    public RestBean<String> registerToken() {
+        return RestBean.success(service.registerToken());
+    }
+
+    @GetMapping("/delete")
+    public RestBean<Void> deleteClient(int clientId){
+        service.deleteClientById(clientId);
+        return RestBean.success();
     }
 
 }

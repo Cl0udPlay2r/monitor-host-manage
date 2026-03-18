@@ -82,7 +82,7 @@ const displayClientDrawer = (id) => {
     </div>
     <el-drawer size="520" :show-close="false" v-model="detail.show"
                :with-header="false" @close="detail.id = -1">
-        <client-details :id="detail.id" :update="update"/>
+        <client-details :id="detail.id" :update="update" @delete="props.update"/>
     </el-drawer>
 </template>
 
