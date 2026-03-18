@@ -1,13 +1,37 @@
 <script setup lang="ts">
 import PreviewCard from "@/component/PreviewCard.vue";
-import {reactive, ref} from "vue";
+import {computed, reactive, ref} from "vue";
 import {get} from "@/net";
 import RegisterCard from "@/component/RegisterCard.vue";
 import {Plus} from "@element-plus/icons-vue";
+import {useRoute} from "vue-router";
 
 const list = ref([])
 
-const updateList = () => get('/api/monitor/list', data => list.value = data)
+const locations = [
+    {node: 'cn', desc: '中国大陆'},
+    {node: 'hk', desc: '香港'},
+    {node: 'jp', desc: '日本'},
+    {node: 'us', desc: '美国'},
+    {node: 'sg', desc: '新加坡'},
+    {node: 'de', desc: '德国'},
+    {node: 'kr', desc: '韩国'},
+]
+const checkNodes = ref([])
+
+const route = useRoute()
+
+const clientList = computed(() => {
+    if (checkNodes.value.length === 0)
+        return list.value
+    else return list.value.filter(item => checkNodes.value.indexOf(item.location) >= 0)
+})
+
+const updateList = () => {
+    if(route.name === 'manage'){
+        get('/api/monitor/list', data => list.value = data)
+    }
+}
 setInterval(updateList, 10000)
 updateList()
 
@@ -16,7 +40,7 @@ const register = reactive({
     token: ''
 })
 
-const refreshToken = () => get('api/monitor/register',data => register.token = data)
+const refreshToken = () => get('api/monitor/register', data => register.token = data)
 </script>
 
 <template>
@@ -34,10 +58,17 @@ const refreshToken = () => get('api/monitor/register',data => register.token = d
                 </el-button>
             </div>
         </div>
-
         <el-divider style="margin: 10px 0"></el-divider>
+        <el-checkbox-group v-model="checkNodes">
+            <el-checkbox v-for="item in locations" :key="item" :value="item.node" border>
+                <span :class="`flag-icon flag-icon-${item.node}`"/>
+                <span style="font-size: 13px;margin: 3px">
+                    {{ item.desc }}
+                </span>
+            </el-checkbox>
+        </el-checkbox-group>
         <div class="card-list" v-if="list.length">
-            <preview-card v-for="item in list" :data="item" :update="updateList"/>
+            <preview-card v-for="item in clientList" :data="item" :update="updateList"/>
         </div>
         <el-empty description="还没有任何主机哦..." v-else/>
         <el-drawer v-model="register.show" :with-header="false" direction="btt"
@@ -48,6 +79,10 @@ const refreshToken = () => get('api/monitor/register',data => register.token = d
 </template>
 
 <style scoped>
+:deep(.el-checkbox-group .el-checkbox) {
+    margin-right: 10px;
+}
+
 :deep(.el-drawer) {
     margin: 10px;
     height: calc(100% - 20px);
@@ -63,6 +98,7 @@ const refreshToken = () => get('api/monitor/register',data => register.token = d
     }
 
     .card-list {
+        margin-top: 10px;
         display: flex;
         gap: 10px;
         flex-wrap: wrap;

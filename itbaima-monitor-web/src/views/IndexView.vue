@@ -23,13 +23,12 @@ const defaultIndex = () => {
 
 const tab = ref(defaultIndex())
 function changePage(item) {
-    // console.log("item.route:" + item.route + "; tab.value:" + tab.value + "; item.id:" + item.id);
     tab.value = item.id;
     router.push({name: item.route})
 }
 
 function userLogout() {
-    logout(() => router.push("/"))
+    logout(() => router.push("/"),'退出登录成功，欢迎您再次使用')
 }
 
 
@@ -64,7 +63,9 @@ function userLogout() {
         <el-main class="main-content">
             <router-view :key="route.fullPath" v-slot="{Component}">
                 <transition name="el-fade-in-linear" mode="out-in">
-                    <component :is="Component"/>
+                    <keep-alive exclude="Security">
+                        <component :is="Component"/>
+                    </keep-alive>
                 </transition>
             </router-view>
         </el-main>

@@ -10,5 +10,5 @@ public interface AccountService extends IService<Account>, UserDetailsService {
     String registerEmailVerifyCode(String type, String email, String address);
     String resetEmailAccountPassword(EmailResetVO info);
     String resetConfirm(ConfirmResetVO info);
-
+    boolean changePassword(ChangePasswordVO vo,int id);
 }

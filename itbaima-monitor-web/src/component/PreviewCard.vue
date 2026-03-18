@@ -36,9 +36,10 @@ const displayClientDrawer = (id) => {
             </div>
         </div>
         <div class="os">
-            <span>操作系统: {{ `${data.osName} ${data.osVersion}` }}</span>
+            <span> 操作系统: </span>
             <i :style="{color: osNameToIcon(data.osName).color}"
                :class="`fa-brands ${osNameToIcon(data.osName).icon}`"/>
+            <span> {{ `${data.osName} ${data.osVersion}` }}</span>
         </div>
         <el-divider style="margin: 10px 0"></el-divider>
         <div @click="displayClientDrawer(data.id)">
