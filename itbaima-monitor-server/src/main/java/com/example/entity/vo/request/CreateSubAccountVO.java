@@ -1,6 +1,5 @@
 package com.example.entity.vo.request;
 
-import com.alibaba.fastjson2.JSONArray;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
