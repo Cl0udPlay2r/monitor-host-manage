@@ -1,5 +1,5 @@
 <script setup>
-import {get, logout} from '@/net'
+import {logout} from '@/net'
 import router from "@/router";
 import {ref} from "vue";
 import {useDark} from "@vueuse/core";

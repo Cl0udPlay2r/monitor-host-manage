@@ -109,6 +109,7 @@ public class JwtUtils {
         try {
             DecodedJWT verify = jwtVerifier.verify(token);
             if(this.isInvalidToken(verify.getId())) return null;
+            if (this.isInvalidUser(verify.getClaim("id").asInt()))return null;
             Map<String, Claim> claims = verify.getClaims();
             return new Date().after(claims.get("exp").asDate()) ? null : verify;
         } catch (JWTVerificationException e) {
@@ -160,6 +161,13 @@ public class JwtUtils {
         if(headerToken == null || !headerToken.startsWith("Bearer "))
             return null;
         return headerToken.substring(7);
+    }
+    public void deleteUser(int uid){
+        template.opsForValue().set(Const.USER_BLACK_LIST + uid,"",expire,TimeUnit.SECONDS);
+    }
+
+    private boolean isInvalidUser(int uid){
+        return template.hasKey(Const.USER_BLACK_LIST + uid);
     }
 
     /**
