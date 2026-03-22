@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup >
 import {fitByUnit, percentageToStatus, rename, copyIP,osNameToIcon,cpuNameToImagePath} from '@/tools'
 import {reactive} from "vue";
 import ClientDetails from "@/component/ClientDetails.vue";

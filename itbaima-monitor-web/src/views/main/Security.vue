@@ -1,11 +1,13 @@
-<script setup lang="ts">
+<script setup >
 import {Lock, Plus, Switch} from '@element-plus/icons-vue'
 import {reactive, ref} from "vue";
 import {post, logout, get} from "@/net";
 import router from "@/router";
 import CreateSubAccount from "@/component/CreateSubAccount.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
+import {useStore} from "@/store/index.js";
 
+const store = useStore()
 const formRef = ref()
 const valid = ref(false)
 
@@ -55,10 +57,13 @@ function resetPassword() {
 }
 
 const simpleList = ref([])
-get('/api/monitor/simple-list', list => {
-    simpleList.value = list
-    initAccounts()
-})
+if(store.isAdmin) {
+    get('/api/monitor/simple-list', list => {
+        simpleList.value = list
+        initAccounts()
+    })
+}
+
 
 const accounts = ref([])
 const initAccounts = () => {
@@ -147,9 +152,13 @@ const subAccountDetail = ref(false)
                     </el-button>
                 </div>
             </div>
-            <el-empty :image-size="100" description="还没有任何子用户哦" v-else>
-                <el-button :icon="Plus" type="primary" plain @click="subAccountDetail=true">添加子用户</el-button>
-            </el-empty>
+            <div v-else>
+                <el-empty :image-size="100" description="还没有任何子用户哦" v-if="store.isAdmin">
+                    <el-button :icon="Plus" type="primary" plain @click="subAccountDetail=true">添加子用户</el-button>
+                </el-empty>
+                <el-empty :image-size="100" description="子账户只能由管理员进行操作" v-else/>
+            </div>
+
             <el-drawer v-model="subAccountDetail" :with-header="false" size="350">
                 <create-sub-account :clients="simpleList"
                                     @create="subAccountDetail = false;initAccounts()"/>

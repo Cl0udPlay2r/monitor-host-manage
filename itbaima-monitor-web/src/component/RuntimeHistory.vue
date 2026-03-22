@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import * as echarts from 'echarts'
 import {onMounted, watch} from "vue";
 import {defaultOption, singleSeries, doubleSeries} from '@/echarts'

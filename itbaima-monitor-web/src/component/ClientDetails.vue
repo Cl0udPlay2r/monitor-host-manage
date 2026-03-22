@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup >
 import {fitByUnit, percentageToStatus, cpuNameToImagePath, osNameToIcon, rename, copyIP} from '@/tools'
 import {computed, reactive, watch} from "vue";
 import {get, post} from "@/net";

@@ -6,7 +6,9 @@ import {useDark} from "@vueuse/core";
 import {Back, Moon, Sunny} from "@element-plus/icons-vue";
 import TabItem from "@/component/TabItem.vue";
 import {useRoute} from "vue-router";
+import {useStore} from "@/store/index.js";
 
+const store = useStore();
 const route = useRoute()
 const dark = ref(useDark());
 const tabs =[
@@ -42,6 +44,16 @@ function userLogout() {
             <div class="tabs">
                 <tab-item v-for="item in tabs" :name="item.name"
                           :active="item.id === tab " @click="changePage(item)"/>
+                <div style="text-align:center;line-height:18px;">
+                    <div>
+                        <el-tag type="danger" v-if="store.isAdmin" size="small">管理员</el-tag>
+                        <el-tag type="primary" v-else size="small">子账户</el-tag>
+                        {{store.user.username}}
+                    </div>
+                    <div style="font-size: 13px;color: grey">
+                        {{store.user.email}}
+                    </div>
+                </div>
                 <el-dropdown style="margin: 0 10px 0 15px">
                     <el-avatar
                         src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"/>

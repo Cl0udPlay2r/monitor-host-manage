@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup >
 import {reactive, ref} from "vue";
 import {User, Lock, Message} from "@element-plus/icons-vue";
 import {osNameToIcon} from '@/tools'

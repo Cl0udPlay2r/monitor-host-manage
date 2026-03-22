@@ -1,11 +1,13 @@
-<script setup lang="ts">
+<script setup >
 import PreviewCard from "@/component/PreviewCard.vue";
 import {computed, reactive, ref} from "vue";
 import {get} from "@/net";
 import RegisterCard from "@/component/RegisterCard.vue";
 import {Plus} from "@element-plus/icons-vue";
 import {useRoute} from "vue-router";
+import {useStore} from '@/store';
 
+const store = useStore()
 const list = ref([])
 
 const locations = [
@@ -53,7 +55,7 @@ const refreshToken = () => get('api/monitor/register', data => register.token = 
                 </div>
             </div>
             <div style="margin-top: 18px">
-                <el-button type="primary" :icon="Plus" plain
+                <el-button type="primary" :icon="Plus" plain :disabled="!store.isAdmin"
                            @click="register.show = true">添加主机
                 </el-button>
             </div>
