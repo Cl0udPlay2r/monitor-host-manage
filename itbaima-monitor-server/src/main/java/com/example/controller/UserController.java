@@ -3,6 +3,7 @@ package com.example.controller;
 import com.example.entity.RestBean;
 import com.example.entity.vo.request.ChangePasswordVO;
 import com.example.entity.vo.request.CreateSubAccountVO;
+import com.example.entity.vo.request.ModifyEmailVO;
 import com.example.entity.vo.response.SubAccountVO;
 import com.example.service.AccountService;
 import com.example.utils.Const;
@@ -21,27 +22,39 @@ public class UserController {
 
     @PostMapping("/change-password")
     public RestBean<Void> changePassword(@RequestBody @Valid ChangePasswordVO vo,
-                                           @RequestAttribute (Const.ATTR_USER_ID) int id){
-        return service.changePassword(vo,id) ?
-                RestBean.success() : RestBean.failure(401,"原密码输入错误");
+                                         @RequestAttribute(Const.ATTR_USER_ID) int id) {
+        return service.changePassword(vo, id) ?
+                RestBean.success() : RestBean.failure(401, "原密码输入错误");
+    }
+
+    @PostMapping("/modify-email")
+    public RestBean<Void> modifyEmail(@RequestAttribute(Const.ATTR_USER_ID) int id,
+                                      @RequestBody @Valid ModifyEmailVO vo) {
+        String result = service.modifyEmail(vo, id);
+        if (result == null) {
+            return RestBean.success();
+        } else {
+            return RestBean.failure(401, result);
+        }
+
     }
 
     @PostMapping("/sub/create")
-    public RestBean<Void> createSubAccount(@RequestBody @Valid CreateSubAccountVO vo){
+    public RestBean<Void> createSubAccount(@RequestBody @Valid CreateSubAccountVO vo) {
         service.createSubAccount(vo);
         return RestBean.success();
     }
 
     @GetMapping("/sub/delete")
-    public RestBean<Void> deleteSubAccount(int uid,@RequestAttribute (Const.ATTR_USER_ID) int userId){
-        if(uid == userId)
-            return RestBean.failure(401,"非法操作");
+    public RestBean<Void> deleteSubAccount(int uid, @RequestAttribute(Const.ATTR_USER_ID) int userId) {
+        if (uid == userId)
+            return RestBean.failure(401, "非法操作");
         service.deleteSubAccount(uid);
         return RestBean.success();
     }
 
     @GetMapping("/sub/list")
-    public RestBean<List<SubAccountVO>> listSubAccount(){
+    public RestBean<List<SubAccountVO>> listSubAccount() {
         return RestBean.success(service.listSubAccount());
     }
 }

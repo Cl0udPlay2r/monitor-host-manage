@@ -1,7 +1,7 @@
-<script setup >
-import {Lock, Plus, Switch} from '@element-plus/icons-vue'
+<script setup>
+import {Delete, Lock, Message, Plus, Refresh, Switch} from '@element-plus/icons-vue'
 import {reactive, ref} from "vue";
-import {post, logout, get} from "@/net";
+import {get, logout, post} from "@/net";
 import router from "@/router";
 import CreateSubAccount from "@/component/CreateSubAccount.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -29,6 +29,42 @@ const validatePassword = (rule, value, callback) => {
     }
 }
 
+const emailForm = reactive({
+    email: store.user.email,
+    code: ''
+})
+
+const coldTime = ref(0)
+const isEmailValid = ref(true)
+
+const onEmailValidate = (prop, isValid) => {
+    if (prop === 'email')
+        return isEmailValid.value = isValid
+}
+
+const validateEmail = () => {
+    coldTime.value = 60
+    let handle
+    get(`/api/auth/ask-code?email=${emailForm.email}&type=modify`, () => {
+        ElMessage.success(`邮件发送至${emailForm.email}，请注意查收`)
+        handle = setInterval(() => {
+            coldTime.value--
+            if(coldTime.value === 0) {
+                clearInterval(handle)
+            }
+        },1000)
+    },(message) => {
+        ElMessage.warning(message)
+        coldTime.value = 0
+    })
+}
+
+function modifyEmail() {
+    post(`/api/user/modify-email`,emailForm,() => {
+        logout(router.push('/'),'邮件修改成功,请重新登录')
+    })
+}
+
 const rules = {
     password: [
         {required: true, message: '输入旧密码', trigger: ['change', 'blur']},
@@ -41,6 +77,10 @@ const rules = {
     new_password_repeat: [
         {required: true, message: '输入重复密码', trigger: ['change', 'blur']},
         {validator: validatePassword, trigger: ['change', 'blur']},
+    ],
+    email: [
+        {required: true, message: '输入电子邮件地址', trigger: ['change', 'blur']},
+        {type: 'email', message: '输入合法邮件地址', trigger: ['change', 'blur']},
     ]
 }
 
@@ -57,7 +97,7 @@ function resetPassword() {
 }
 
 const simpleList = ref([])
-if(store.isAdmin) {
+if (store.isAdmin) {
     get('/api/monitor/simple-list', list => {
         simpleList.value = list
         initAccounts()
@@ -80,7 +120,8 @@ function deleteSubAccount(uid) {
             ElMessage.success('成功删除该子用户')
             initAccounts()
         })
-    }).catch(() => {})
+    }).catch(() => {
+    })
 
 }
 
@@ -95,7 +136,8 @@ const subAccountDetail = ref(false)
                     <i class="fa-solid fa-lock"/>修改密码
                 </div>
                 <el-divider style="margin: 10px 0"/>
-                <el-form @validate="onValidate" :model="form" ref="formRef" :rules="rules">
+                <el-form @validate="onValidate" :model="form" label-width="100"
+                         ref="formRef" :rules="rules">
                     <el-form-item prop="old_password" label="旧密码" style="margin-top: 20px">
                         <el-input v-model="form.old_password" type="password"
                                   :prefix-icon="Lock" maxlength="18" placeholder="旧密码"/>
@@ -118,6 +160,34 @@ const subAccountDetail = ref(false)
                 </el-form>
             </div>
             <div class="info-card" style="margin-top: 10px">
+                <div class="title">
+                    <i class="fa-regular fa-envelope"/>修改电子邮件
+                </div>
+                <el-divider style="margin: 10px 0"/>
+                <el-form @validate="onValidate" :model="emailForm" :rules="rules" label-position="top">
+                    <el-form-item prop="email" label="电子邮件">
+                        <el-input :prefix-icon="Message" type="text"
+                                  v-model="emailForm.email" placeholder="输入邮件地址"/>
+                    </el-form-item>
+                    <el-form-item prop="code">
+                        <el-row style="width: 100%" :gutter="10">
+                            <el-col :span="18">
+                                <el-input v-model="emailForm.code"
+                                          type="text" maxlength="6" placeholder="验证码"/>
+                            </el-col>
+                            <el-col :span="6">
+                                <el-button type="success" @click="validateEmail"
+                                           :disabled="!isEmailValid || coldTime > 0">
+                                    {{coldTime > 0 ? `在${coldTime}后再试` : '获取验证码'}}
+                                </el-button>
+                            </el-col>
+                        </el-row>
+                    </el-form-item>
+                    <div>
+                        <el-button type="warning" plain :icon="Refresh" :disabled="!emailForm.email"
+                                   @click="modifyEmail">确定重置邮件</el-button>
+                    </div>
+                </el-form>
             </div>
         </div>
         <div class="info-card" style="flex: 50%">
@@ -141,7 +211,8 @@ const subAccountDetail = ref(false)
                         </div>
                     </div>
                     <div>
-                        <el-button size="small" type="danger" plain @click="deleteSubAccount(item.id)">
+                        <el-button size="small" type="danger" plain :icon="Delete"
+                                   @click="deleteSubAccount(item.id)">
                             删除该子用户
                         </el-button>
                     </div>

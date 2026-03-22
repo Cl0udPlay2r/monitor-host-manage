@@ -125,6 +125,18 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     @Override
+    public String modifyEmail(ModifyEmailVO vo, int uid) {
+        String code = this.getEmailVerifyCode(vo.getEmail());
+        if(code == null) return "请先获取验证码";
+        if (!code.equals(vo.getCode())) return "验证码错误，请重新输入";
+        this.deleteEmailVerifyCode(vo.getEmail());
+        Account account = this.findAccountByNameOrEmail(vo.getEmail());
+        if(account != null) return "该邮箱已被其他用户绑定，请更换其他邮件";
+        this.update(Wrappers.<Account>update().set("email",vo.getEmail()).eq("id",uid));
+        return null;
+    }
+
+    @Override
     public boolean changePassword(ChangePasswordVO vo, int id) {
         Account account = this.getById(id);
         String password = account.getPassword();

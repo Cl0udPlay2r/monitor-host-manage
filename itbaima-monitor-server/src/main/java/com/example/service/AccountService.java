@@ -13,6 +13,7 @@ public interface AccountService extends IService<Account>, UserDetailsService {
     String registerEmailVerifyCode(String type, String email, String address);
     String resetEmailAccountPassword(EmailResetVO info);
     String resetConfirm(ConfirmResetVO info);
+    String modifyEmail(ModifyEmailVO vo,int uid);
     boolean changePassword(ChangePasswordVO vo,int id);
     void createSubAccount(CreateSubAccountVO vo);
     void deleteSubAccount(int id);
