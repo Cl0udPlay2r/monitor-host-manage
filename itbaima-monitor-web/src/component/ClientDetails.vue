@@ -4,7 +4,7 @@ import {computed, reactive, watch} from "vue";
 import {get, post} from "@/net";
 import {ElMessage, ElMessageBox} from "element-plus";
 import RuntimeHistory from "@/component/RuntimeHistory.vue";
-import {Delete} from "@element-plus/icons-vue";
+import {Connection, Delete} from "@element-plus/icons-vue";
 
 const locations = [
     {node: 'cn', desc: '中国大陆'},
@@ -21,7 +21,7 @@ const props = defineProps({
     update: Function
 })
 
-const emits = defineEmits(['delete'])
+const emits = defineEmits(['delete','terminal'])
 
 function deleteClient() {
     ElMessageBox.confirm('删除此主机后所有统计数据都会消失，您确定要这样做吗？','删除主机',{
@@ -131,8 +131,13 @@ watch(() => props.id, init, {immediate: true})
                         <i class="fa-solid fa-server"/>
                         服务器信息
                     </div>
-                    <el-button :icon="Delete" type="danger" plain
-                               @click="deleteClient" >删除此主机</el-button>
+                    <div>
+                        <el-button :icon="Connection" type="info" plain
+                                   @click="emits('terminal',id)" >SSH远程连接</el-button>
+                        <el-button :icon="Delete" type="danger" plain
+                                   @click="deleteClient" >删除此主机</el-button>
+                    </div>
+
                 </div>
                 <el-divider style="margin: 10px 0"/>
                 <div class="details-list">

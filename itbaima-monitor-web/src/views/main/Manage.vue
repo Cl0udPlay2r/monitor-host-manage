@@ -43,6 +43,8 @@ const register = reactive({
 })
 
 const refreshToken = () => get('api/monitor/register', data => register.token = data)
+
+
 </script>
 
 <template>
@@ -77,6 +79,7 @@ const refreshToken = () => get('api/monitor/register', data => register.token = 
                    style="width: 600px;margin: 10px auto" size="350" @open="refreshToken">
             <register-card :token="register.token"/>
         </el-drawer>
+
     </div>
 </template>
 
