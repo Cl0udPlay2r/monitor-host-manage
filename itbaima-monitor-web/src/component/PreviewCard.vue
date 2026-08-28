@@ -101,6 +101,7 @@ const terminal = reactive({
                             @terminal="terminalShow"/>
         </el-drawer>
         <el-drawer style="width: 800px" :size="500" direction="btt"
+                   @close="terminal.id=-1"
                    v-model="terminal.show" :close-on-click-modal="false">
             <template #header>
                 <div>

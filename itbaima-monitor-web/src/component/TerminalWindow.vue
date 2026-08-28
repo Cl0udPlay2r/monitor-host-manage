@@ -3,6 +3,7 @@
 import {reactive, ref, watch} from "vue";
 import {get, post} from "@/net/index.js";
 import {ElMessage} from "element-plus";
+import Terminal from "@/component/Terminal.vue";
 
 const props = defineProps({
     id: Number
@@ -31,6 +32,9 @@ const rules = {
     ]
 }
 
+//终端关闭为1 开启为2
+const state = ref(1)
+
 function saveConnection() {
     formRef.value.validate((valid) => {
         if(valid) {
@@ -38,7 +42,8 @@ function saveConnection() {
                 ...form,
                 id: props.id
             },() => {
-                ElMessage.success('正在连接...')
+                ElMessage.success('连接成功')
+               state.value = 2
             },(message) => {
                 ElMessage.warning(message)
             })
@@ -47,14 +52,18 @@ function saveConnection() {
 }
 
 watch(() => props.id, id => {
-    form.ip = ''
-    get(`/api/monitor/ssh?clientId=${id}`,data => Object.assign(form,data))
+    state.value = 1
+    if(id !== -1){
+        form.ip = ''
+        get(`/api/monitor/ssh?clientId=${id}`,data => Object.assign(form,data))
+    }
+
 },{immediate:true})
 </script>
 
 <template>
     <div class="terminal-main">
-        <div class="login" v-loading="!form.ip">
+        <div class="login" v-loading="!form.ip" v-if="state === 1">
             <i style="font-size: 50px" class="fa-solid fa-terminal"/>
             <div style="font-size: 20px;font-weight: bold;margin-top: 10px">服务器连接信息</div>
             <el-form :rules="rules" ref="formRef" @validate="onValidate"
@@ -71,11 +80,15 @@ watch(() => props.id, id => {
                     <el-input v-model="form.username"  placeholder="登录用户名"/>
                 </el-form-item>
                 <el-form-item prop="password" label="密码">
-                    <el-input v-model="form.password"  placeholder="登录密码"/>
+                    <el-input v-model="form.password"  placeholder="登录密码" type="password"/>
                 </el-form-item>
-
                 <el-button type="success" plain @click="saveConnection">确认连接</el-button>
             </el-form>
+        </div>
+        <div v-if="state === 2">
+            <div style="overflow: hidden;padding: 0 10px 10px 10px">
+                <terminal :id="id" @dispose="state = 1"/>
+            </div>
         </div>
     </div>
 

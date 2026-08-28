@@ -10,8 +10,8 @@ spring:
     token: "apiv3_p3Y4ojB3vTLwJaaUiI40NXUQQ5bnfjxE1iBoMBoJyO-quZCiLG6pTPXvvMfX1xHe-Dzr3brMTDiniGjvK29k5A"
   mail:
     host: smtp.163.com
-    username: jxlpdt1@163.com
-    password: SYU3KgKB4QeLcn5M
+    username: ${SEND_MAIL}
+    password: ${MAIL_KEY}
   rabbitmq:
     addresses: localhost
     username: guest

@@ -26,7 +26,9 @@
     "quill-image-super-solution-module": "^2.0.1",
     "qweather-icons": "^1.8.0",
     "vue": "^3.5.22",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.3",
+    "xterm": "^5.3.0",
+    "xterm-addon-attach": "^0.9.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
