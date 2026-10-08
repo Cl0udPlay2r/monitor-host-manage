@@ -10,6 +10,7 @@ import jakarta.websocket.HandshakeResponse;
 import jakarta.websocket.server.HandshakeRequest;
 import jakarta.websocket.server.ServerEndpointConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public class TerminalHandshakeConfigurator extends ServerEndpointConfig.Configur
     private String extractRole(DecodedJWT jwt) {
         try {
             List<String> authorities = new ArrayList<>(jwtUtils.toUser(jwt).getAuthorities())
-                    .stream().map(a -> a.getAuthority()).toList();
+                    .stream().map(GrantedAuthority::getAuthority).toList();
             if (authorities.isEmpty()) return null;
             String authority = authorities.get(0);
             return authority.startsWith(ROLE_PREFIX) ? authority.substring(ROLE_PREFIX.length()) : authority;
