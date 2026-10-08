@@ -14,6 +14,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 @Slf4j
 @Component
@@ -23,7 +24,15 @@ public class NetUtils {
     @Resource
     ConnectionConfig config;
 
-    private final HttpClient client =  HttpClient.newHttpClient();
+    // 必须显式设置超时：服务端不可达时（防火墙静默丢包）默认行为是无限期阻塞，
+    // 而采集任务每 10 秒起一个线程，阻塞会把 Quartz 工作线程逐步占满，
+    // 最终从“一次网络故障”放大成“采集链路整体停摆”（见测试记录 F6）。
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
+
+    private final HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(CONNECT_TIMEOUT)
+            .build();
 
     public boolean registerToServer(String address,String token){
         log.info("正在向服务端发起注册请求...");
@@ -45,6 +54,7 @@ public class NetUtils {
              HttpRequest request = HttpRequest.newBuilder().GET()
                      .uri(new URI(address + "/monitor" + url))
                      .header("Authorization",token)
+                     .timeout(REQUEST_TIMEOUT)
                      .build();
              HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
              return JSONObject.parseObject(response.body()).to(Response.class);
@@ -76,6 +86,7 @@ public class NetUtils {
                     .uri(new URI(config.getAddress() + "/monitor" + url))
                     .header("Authorization", config.getToken())
                     .header("Content-Type","application/json")
+                    .timeout(REQUEST_TIMEOUT)
                     .build();
             HttpResponse<String> response = client.send(request,HttpResponse.BodyHandlers.ofString());
             return JSONObject.parseObject(response.body()).to(Response.class);

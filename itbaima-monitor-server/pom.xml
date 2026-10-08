@@ -129,6 +129,12 @@
             <artifactId>jsch</artifactId>
             <version>0.1.55</version>
         </dependency>
+        <!--   读取环境变量     -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>springboot3-dotenv</artifactId>
+            <version>5.1.0</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -160,10 +166,32 @@
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
             </plugin>
+            <!--
+                Apache Arrow（InfluxDB 3 Java 客户端的查询通道依赖它）在 JDK 17+ 模块系统下
+                需要为 java.base/java.nio 打开模块访问权限，否则无法初始化 MemoryUtil，
+                查询会抛 InaccessibleObjectException 并被上层包装成 "Failed to read message."。
+                写入走纯 HTTP 不经 Arrow，因此缺少该参数时表现为「写入正常、查询全废」。
+                写入 jar 清单的 Add-Opens 属性，使 java -jar 启动时自动生效，无需额外命令行参数。
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Add-Opens>java.base/java.nio</Add-Opens>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- IDEA 直接 Run 主类、或 mvn spring-boot:run 都不会读取 jar 清单的 Add-Opens，
+                         这里显式传入，保证开发态下 Arrow 也能初始化（IDEA 的 Run Configuration
+                         仍需在 VM options 里自行添加同一个参数）。 -->
+                    <jvmArguments>--add-opens=java.base/java.nio=ALL-UNNAMED</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

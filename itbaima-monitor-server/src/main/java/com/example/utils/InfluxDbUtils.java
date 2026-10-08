@@ -5,6 +5,7 @@ import com.example.entity.vo.request.RuntimeDetailVO;
 import com.example.entity.vo.response.RuntimeHistoryVO;
 import com.influxdb.v3.client.InfluxDBClient;
 import com.influxdb.v3.client.Point;
+import com.example.controller.exception.TimeSeriesQueryException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,8 +81,10 @@ public class InfluxDbUtils {
             });
             return vo;
         } catch (Exception e) {
-            log.error("influxdb数据库查询失败: {}", e.getMessage());
-            return null;
+            // 不再返回 null：null 会被 Controller 包成「成功 + 空数据」，前端表现为一张空图表且无任何
+            // 错误提示，等同于用空数据掩盖存储层故障（见 F12）。改为抛出专用异常，由全局异常处理返回 500。
+            log.error("influxdb数据库查询失败", e);
+            throw new TimeSeriesQueryException("时序库查询失败，请稍后重试", e);
         }
     }
 

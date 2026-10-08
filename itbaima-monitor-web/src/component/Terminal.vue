@@ -5,6 +5,8 @@ import {ElMessage} from "element-plus";
 import {AttachAddon} from "xterm-addon-attach/src/AttachAddon.js";
 import {Terminal} from "xterm";
 import "xterm/css/xterm.css"
+import {takeAccessToken} from "@/net/index.js";
+import {WS_BASE} from "@/net/config.js";
 
 const props = defineProps({
     id: Number
@@ -14,7 +16,10 @@ const emits = defineEmits(['dispose'])
 
 const terminalRef = ref()
 
-const socket = new WebSocket(`ws://127.0.0.1:8080/terminal/${props.id}`)
+// 浏览器无法为 WebSocket 自定义请求头，故令牌经 Sec-WebSocket-Protocol 子协议字段传递，
+// 由服务端 TerminalHandshakeConfigurator 在握手阶段完成 JWT 与主机权限校验
+const token = takeAccessToken()
+const socket = new WebSocket(`${WS_BASE}/terminal/${props.id}`, token ? ['bearer', token] : ['bearer'])
 socket.onclose = evt => {
     if (evt.code !== 1000) {
         ElMessage.warning(`连接失败${evt.reason}`)
@@ -39,6 +44,15 @@ const term = new Terminal({
     tabStopWidth: 4
 })
 term.loadAddon(attachAddon)
+
+// 终端尺寸同步：xterm 默认 80x20，而服务端未设置 PTY 尺寸时 JSch 会回退成 24x80，
+// 两者不一致会让 top/vi 等全屏程序错行（见 F10）。以 NUL 开头的控制帧上报尺寸。
+const syncTerminalSize = () => {
+    if (socket.readyState === WebSocket.OPEN)
+        socket.send(`\u0000resize:${term.cols},${term.rows}`)
+}
+socket.addEventListener('open', syncTerminalSize)
+term.onResize(syncTerminalSize)
 
 onMounted(() => {
     term.open(terminalRef.value)

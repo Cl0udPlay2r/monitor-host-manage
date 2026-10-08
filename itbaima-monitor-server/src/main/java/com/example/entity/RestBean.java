@@ -35,7 +35,8 @@ public record RestBean<T> (long id, int code, T data, String message) {
     }
 
     public static <T> RestBean<T> noPermission() {
-        return new RestBean<>(requestId(),401,null,"权限不足，拒绝访问");
+        // 权限不足应回 403；若用 401，前端会把它当成“登录已过期”而清 token 并跳登录页（见测试记录 F14）
+        return new RestBean<>(requestId(),403,null,"权限不足，拒绝访问");
     }
 
     /**

@@ -53,6 +53,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(conf -> conf
+                        // WebSocket 握手不经过 Servlet 过滤器链，且令牌由子协议字段携带，
+                        // 故此处放行，身份与主机权限由 TerminalHandshakeConfigurator 在握手阶段强校验
                         .requestMatchers("/terminal/**").permitAll()
                         .requestMatchers("/api/auth/**", "/error").permitAll()
                         .requestMatchers("/monitor/**").permitAll()
@@ -72,8 +74,8 @@ public class SecurityConfiguration {
                         .logoutSuccessHandler(this::onLogoutSuccess)
                 )
                 .exceptionHandling(conf -> conf
-                        .accessDeniedHandler(this::handleProcess)
-                        .authenticationEntryPoint(this::handleProcess)
+                        .accessDeniedHandler(this::handleSecurityProcess)
+                        .authenticationEntryPoint(this::handleSecurityProcess)
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(conf -> conf
@@ -96,12 +98,33 @@ public class SecurityConfiguration {
     private void handleProcess(HttpServletRequest request,
                                HttpServletResponse response,
                                Object exceptionOrAuthentication) throws IOException {
+        // 登录成功/失败共用：保持 HTTP 200，由响应体 code 告知前端具体原因
+        // （若给登录失败也设 401，前端会把“密码错误”误判为“登录已过期”并跳登录页）
+        this.writeProcessResponse(response, exceptionOrAuthentication, false);
+    }
+
+    /**
+     * 鉴权失败 / 权限不足专用：除响应体外还回真实 HTTP 状态码。
+     * 旧实现只写响应体不设状态码，所有鉴权失败都以 200 返回，
+     * 网关限流、监控告警、前端拦截器都无法基于状态码工作（见 F2）。
+     */
+    private void handleSecurityProcess(HttpServletRequest request,
+                                       HttpServletResponse response,
+                                       Object exceptionOrAuthentication) throws IOException {
+        this.writeProcessResponse(response, exceptionOrAuthentication, true);
+    }
+
+    private void writeProcessResponse(HttpServletResponse response,
+                                      Object exceptionOrAuthentication,
+                                      boolean withStatus) throws IOException {
         response.setContentType("application/json;charset=utf-8");
         PrintWriter writer = response.getWriter();
         if(exceptionOrAuthentication instanceof AccessDeniedException exception) {
+            if (withStatus) response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             writer.write(RestBean
                     .forbidden(exception.getMessage()).asJsonString());
         } else if(exceptionOrAuthentication instanceof Exception exception) {
+            if (withStatus) response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             writer.write(RestBean
                     .unauthorized(exception.getMessage()).asJsonString());
         } else if(exceptionOrAuthentication instanceof Authentication authentication){

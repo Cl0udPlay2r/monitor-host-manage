@@ -27,6 +27,11 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # HikariCP 默认 connectionTimeout 为 30s，数据库故障时会把 Tomcat 工作线程占住 30 秒
+      # 才返回失败（见测试记录 F16）；降级策略定为“拒绝”，这里改为快速失败。
+      connection-timeout: 3000
+      validation-timeout: 2000
   security:
     jwt:
       key: 'abcdefghijklmn'
@@ -37,6 +42,9 @@ spring:
         frequency: 30
     filter:
       order: -100
+    credential:
+      # SSH 等凭据的 AES 加密密钥。生产环境务必用环境变量注入，不要写死在配置文件里。
+      key: ${CREDENTIAL_KEY:pi-local-dev-credential-key}
   web:
     verify:
       mail-limit: 60
@@ -57,3 +65,7 @@ spring:
 #      port: 6449
       host: localhost
       port: 6379
+      # Lettuce 默认命令超时 60s，Redis 故障时每个已登录请求会挂起 60 秒
+      # 后才返回 500（见测试记录 F13）；降级策略定为“拒绝”，这里改为快速失败。
+      timeout: 2s
+      connect-timeout: 2s

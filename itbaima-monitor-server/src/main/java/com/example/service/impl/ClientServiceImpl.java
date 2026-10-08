@@ -12,6 +12,7 @@ import com.example.mapper.ClientMapper;
 import com.example.mapper.ClientSshMapper;
 import com.example.service.ClientService;
 import com.example.utils.InfluxDbUtils;
+import com.example.utils.CredentialCipher;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
@@ -37,6 +38,9 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
 
     @Resource
     ClientSshMapper  sshMapper;
+
+    @Resource
+    CredentialCipher cipher;
 
     @PostConstruct
     public void initClientCache(){
@@ -83,8 +87,11 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
 
     @Override
     public void updateRuntimeDetail(Client client, RuntimeDetailVO vo) {
-        currentRuntimeDetail.put(client.getId(),vo);
-        influx.writeRuntimeDetail(vo,client.getId());
+        // 先持久化、后更新缓存：旧实现先写缓存再同步写时序库，导致时序库彻底熔断时
+        // 大盘依旧展示实时数据（假健康），只看到历史数据在丢（见 F5）。
+        // 调整顺序后，写入失败则缓存保持旧值，主机将在 1 分钟后被判离线，故障会在大盘上暴露出来。
+        influx.writeRuntimeDetail(vo, client.getId());
+        currentRuntimeDetail.put(client.getId(), vo);
     }
 
     @Override
@@ -177,6 +184,8 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
         if(client == null) return;
         ClientSsh ssh = new ClientSsh();
         BeanUtils.copyProperties(vo,ssh);
+        // SSH 口令加密后入库：原先明文存储，数据库或备份泄漏即导致所有被管主机失守（见 F4）
+        ssh.setPassword(cipher.encrypt(ssh.getPassword()));
         if(Objects.nonNull(sshMapper.selectById(ssh.getId()))){
             sshMapper.updateById(ssh);
         }else {
@@ -193,6 +202,8 @@ public class ClientServiceImpl extends ServiceImpl<ClientMapper, Client> impleme
             vo = new SshSettingVO();
         }else {
             vo = ssh.asViewObject(SshSettingVO.class);
+            // 库里存的是密文，出参仍解密为明文供前端表单回填
+            vo.setPassword(cipher.decrypt(vo.getPassword()));
         }
         vo.setIp(detail.getIp());
         return vo;

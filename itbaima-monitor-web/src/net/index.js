@@ -13,9 +13,17 @@ const accessHeader = () => {
 
 const defaultError = (error) => {
     console.error(error)
-    const status = error.response.status
-    if (status === 429) {
-        ElMessage.error(error.response.data.message)
+    // 后端已改为在鉴权失败时返回真实 HTTP 状态码（见 F2），这里相应改为按状态码分支，
+    // 若不处理 401，令牌过期后将不再自动清理与跳转登录页。
+    const status = error.response?.status
+    const message = error.response?.data?.message
+    if (status === 401) {
+        ElMessage.warning('登录状态已过期，请重新登录！')
+        deleteAccessToken(true)
+    } else if (status === 403) {
+        ElMessage.warning(message || '权限不足')
+    } else if (status === 429) {
+        ElMessage.error(message)
     } else {
         ElMessage.error('发生了一些错误，请联系管理员')
     }
@@ -123,4 +131,4 @@ function unauthorized() {
     return !takeAccessToken()
 }
 
-export { post, get, login, logout, unauthorized ,accessHeader}
+export { post, get, login, logout, unauthorized ,accessHeader, takeAccessToken}

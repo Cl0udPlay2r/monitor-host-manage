@@ -45,7 +45,8 @@ public class FlowLimitingFilter extends HttpFilter {
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String address = request.getRemoteAddr();
-        if ("OPTIONS".equals(request.getMethod()) && !tryCount(address))
+        // 只对真实请求计数，预检 OPTIONS 不参与限流（否则浏览器频繁探测就会把 IP 打进黑名单）
+        if (!"OPTIONS".equals(request.getMethod()) && !tryCount(address))
             this.writeBlockMessage(response);
         else
             chain.doFilter(request, response);

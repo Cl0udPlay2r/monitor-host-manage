@@ -2,3 +2,7 @@
 log
 config
 output/
+
+.env
+
+/ops-test/

@@ -78,6 +78,7 @@ public class MonitorController {
                                              @RequestAttribute(Const.ATTR_USER_ID) int userId,
                                              @RequestAttribute(Const.ATTR_USER_ROLE) String role) {
         if (permissionCheck(role, userId, clientId)) {
+            if (clientNotExist(clientId)) return RestBean.failure(404, "主机不存在");
             return RestBean.success(service.findClientDetailsById(clientId));
         } else {
             return RestBean.noPermission();
@@ -89,6 +90,7 @@ public class MonitorController {
                                                             @RequestAttribute(Const.ATTR_USER_ID) int userId,
                                                             @RequestAttribute(Const.ATTR_USER_ROLE) String role) {
         if (permissionCheck(role, userId, clientId)) {
+            if (clientNotExist(clientId)) return RestBean.failure(404, "主机不存在");
             return RestBean.success(service.runtimeDetailsHistory(clientId));
         } else {
             return RestBean.noPermission();
@@ -100,6 +102,7 @@ public class MonitorController {
                                                        @RequestAttribute(Const.ATTR_USER_ID) int userId,
                                                        @RequestAttribute(Const.ATTR_USER_ROLE) String role) {
         if (permissionCheck(role, userId, clientId)) {
+            if (clientNotExist(clientId)) return RestBean.failure(404, "主机不存在");
             return RestBean.success(service.runtimeDetailNow(clientId));
         } else {
             return RestBean.noPermission();
@@ -143,10 +146,19 @@ public class MonitorController {
                                              @RequestAttribute(Const.ATTR_USER_ID) int userId,
                                              @RequestAttribute(Const.ATTR_USER_ROLE) String role){
         if(permissionCheck(role, userId, clientId)){
+            if (clientNotExist(clientId)) return RestBean.failure(404, "主机不存在");
             return  RestBean.success(service.sshSetting(clientId));
         }else {
             return RestBean.noPermission();
         }
+    }
+
+    /**
+     * 主机是否存在。刻意放在权限校验之后调用：越权用户仍应得到 403，
+     * 而不应通过 404 与 200 的差异推测出某台主机是否存在（见 F15）。
+     */
+    private boolean clientNotExist(int clientId) {
+        return service.findClientById(clientId) == null;
     }
 
     private boolean isAdminAccount(String role) {
